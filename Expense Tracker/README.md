@@ -25,5 +25,5 @@ $ tracker summary --month 8
 # Total expenses for August: $20
 
 $ tracker export-csv
-# Expenses exported to C:\...\expenses.csv
+# Expenses exported to ...\expenses.csv
 ```
