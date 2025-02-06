@@ -1,67 +1,83 @@
 const { Command } = require('commander');
+const readline = require('readline');
+
 const program = new Command();
+// Creating an interactive command-line interface for reading user input (stdin) and writing output (stdout) using readline
+const rl = readline.createInterface({
+  input: process.stdin,
+  output: process.stdout
+});
+// constants
+let number;
+let attempts = 0;
 let max;
 
-program.version('1.0.0').description('A simple number guessing game').requiredOption('-d, --difficulty <level>', 'Set difficulty level (easy, medium, hard)').option('-g, --guesses <numbers...>', 'List of guesses (separated by spaces)');
+program.version('1.0.0').description('A simple number guessing game');
 
-program.parse(process.argv);
-const options = program.opts();
-
-function game(difficulty, guesses) {
+// Starting the game by displaying a welcome message, asking for difficulty level, and setting the number of attempts based on the user's choice.
+function game() {
   console.log('Welcome to the Number Guessing Game!');
-  console.log("I'm thinking of a number between 1 and 100");
+  console.log("I'm thinking of a number between 1 and 100.");
+  console.log('\nPlease select the difficulty level:');
+  console.log('1. Easy (10 chances)');
+  console.log('2. Medium (5 chances)');
+  console.log('3. Hard (3 chances)');
 
-  switch (difficulty.toLowerCase()) {
-    case 'easy':
-      max = 10;
-      break;
-    case 'medium':
-      max = 5;
-      break;
-    case 'hard':
-      max = 3;
-      break;
-    default:
-      console.log('Invalid difficulty level. Choose easy, medium, or hard');
-      process.exit(1);
+  rl.question('\nEnter your choice (1/2/3): ', (choice) => {
+    switch (choice.trim()) {
+      case '1':
+        max = 10;
+        console.log('\nGreat! You have selected the "Easy" difficulty level.');
+        break;
+      case '2':
+        max = 5;
+        console.log('\nGreat! You have selected the "Medium" difficulty level.');
+        break;
+      case '3':
+        max = 3;
+        console.log('\nGreat! You have selected the "Hard" difficulty level.');
+        break;
+      default:
+        console.log('\nInvalid choice. Please enter 1, 2, or 3.');
+        game();
+        return;
+    }
+
+    console.log(`Let's start the game! You have ${max} chances.`);
+    number = Math.floor(Math.random() * 100) + 1;
+    play();
+  });
+}
+//  Handling the gameplay loop
+function play() {
+  if (attempts >= max) {
+    console.log(`You've run out of attempts. The correct number was ${number}.`);
+    rl.close();
+    return;
   }
 
-  const number = Math.floor(Math.random() * 100) + 1;
-  console.log(`Target number (for debugging): ${number}`);
+  rl.question(`\nAttempt ${attempts + 1}/${max} - Enter your guess (1-100): `, (answer) => {
+    const input = parseInt(answer, 10);
 
-  if (!guesses || guesses.length === 0) {
-    console.log(`Game started! You have ${max} attempts`);
-    console.log('Make guesses using: node guess.js -d hard -g 30 50 70');
-    process.exit();
-  }
-
-  let attempts = 0;
-  for (const guess of guesses) {
-    const input = parseInt(guess, 10);
-
-    if (isNaN(input)) {
-      console.log(`"${guess}" is not a valid number.`);
-      continue;
+    if (isNaN(input) || input < 1 || input > 100) {
+      console.log('Please enter a valid number between 1 and 100.');
+      play();
+      return;
     }
 
     attempts++;
 
-    if (attempts > max) {
-      console.log(`You've run out of attempts! The correct number was ${number}.`);
-      process.exit();
-    }
-
     if (input === number) {
       console.log(`Congratulations! You guessed the correct number in ${attempts} attempts.`);
-      process.exit();
+      rl.close();
     } else if (input < number) {
-      console.log(`Guess ${input}: Too low!`);
+      console.log('Too low! Try again.');
+      play();
     } else {
-      console.log(`Guess ${input}: Too high!`);
+      console.log('Too high! Try again.');
+      play();
     }
-  }
-
-  console.log(`Attempts used: ${attempts}/${max}`);
-  console.log('Try again with more guesses.');
+  });
 }
-game(options.difficulty, options.guesses);
+
+game();
